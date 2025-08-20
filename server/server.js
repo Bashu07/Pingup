@@ -3,7 +3,7 @@ import express from 'express'
 import cors from 'cors'
 
 import { inngest, functions } from "./inngest/index.js"
-
+import {serve} from 'inngest/express'
 
 import 'dotenv/config'
 import connectDB from './configs/db.js'

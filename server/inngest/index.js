@@ -48,7 +48,7 @@ const SyncUserUpdation = inngest.createFunction(
     }
 )
 
-c
+
 // Inngest function to delete the userdta in database
 const SyncUserDeletion = inngest.createFunction(
     {id:'delete-user-from-clerk'},
