@@ -1,4 +1,5 @@
 import { Inngest } from "inngest";
+import User from "../models/user.js";
 
 // Create a client to send and receive events
 export const inngest = new Inngest({ id: "pingup-app" });
@@ -25,7 +26,7 @@ const SyncUserCreation = inngest.createFunction(
             profile_picture : image_url,
             username
         }
-        await user.create(userData)
+        await User.create(userData)
     }
 )
 

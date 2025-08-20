@@ -1,5 +1,4 @@
 import mongoose from 'mongoose'
-import { use } from 'react'
 
 const userSchema = new mongoose.Schema({
     _id:{type:String , required:true},
