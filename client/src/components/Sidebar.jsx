@@ -8,7 +8,7 @@ import { UserButton, useClerk } from '@clerk/clerk-react'
 const Sidebar = ({ sidebarOpen, setSidebarOpen }) => {
   const navigate = useNavigate()
   const user = dummyUserData
-  const { SignOut } = useClerk()
+  const {signOut} = useClerk()
 
   return (
     <div
@@ -48,7 +48,7 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }) => {
           </div>
         </div>
         <LogOut
-          onClick={SignOut}
+          onClick={signOut}
           className="w-4.5 text-gray-400 hover:text-gray-700 transition cursor-pointer"
         />
       </div>

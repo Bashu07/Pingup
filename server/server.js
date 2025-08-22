@@ -2,11 +2,13 @@ import express from 'express'
 
 import cors from 'cors'
 
+import { clerkMiddleware } from '@clerk/express'
 import { inngest, functions } from "./inngest/index.js"
 import {serve} from 'inngest/express'
 
 import 'dotenv/config'
 import connectDB from './configs/db.js'
+import userRouter from './routes/userRoutes.js'
 
 const app =express()
 
@@ -14,8 +16,14 @@ app.use(express.json())
 
 app.use(cors())
 
+// clerk middleware
+app.use(clerkMiddleware())
+
 // Set up the "/api/inngest" (recommended) routes with the serve handler
 app.use("/api/inngest", serve({ client: inngest, functions }));
+
+// router
+app.use('/api/user' , userRouter)
 
 await connectDB()
 
