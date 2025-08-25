@@ -143,8 +143,8 @@ const deleteStory = inngest.createFunction(
 )
 
 const sendNotificationUnseenMessages = inngest.createFunction(
-    { id: "send-unseen-messages-notification" },
-    { cron: "TZ = America/new_York 0 9 * * *" },
+     { id: "send-unseen-messages-notification" },
+  { cron: "0 9 * * *", tz: "America/New_York" },
 
 
   async({step})=>{
