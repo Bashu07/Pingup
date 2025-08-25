@@ -1,5 +1,7 @@
 import imagekit from "../configs/imagekit.js";
+import { inngest } from "../inngest/index.js";
 import Connection from "../models/connection.js";
+import Post from "../models/post.js";
 import User from "../models/user.js";
 import fs from "fs";
 
@@ -205,10 +207,16 @@ export const sendConnectionRequest = async(req, res)=>{
         })
 
         if(!connection){
-            await Connection.create({
+          const newConnection =   await Connection.create({
                 from_user_id:userId,
                 to_user_id:id
             })
+
+            await inngest.send({
+                name:'app/connection-request',
+                data:{connectionId:newConnection._id}
+            })
+
            return res.json({success:true , message:"Connecton request sent successfully"})
         }
         else if(connection && connection.status=== 'accepted'){
@@ -247,7 +255,7 @@ export const getUserConnections = async(req,res)=>{
 
 
 // Acceept the connection request
-export const acceptConnectionRequest = async()=>{
+export const acceptConnectionRequest = async(req , res)=>{
 try {
     const {userId} = req.auth()
     const {id} = req.body;
@@ -276,4 +284,22 @@ try {
      console.log(error);
     res.json({ success: false, message: error.message })
 }
+}
+
+// Get User Profile
+export const getProfileUer = async(req,res)=>{
+    try {
+        const {profileId} = req.body
+        const profile=  await User.findById(profileId)
+        if(!profile){
+            return res.json({success:false , message:'Profile not found'})
+
+        }
+        const post = await Post.find({user:profileId}).populate('user')
+        res.json({success:true , profile , post})
+
+    } catch (error) {
+        console.log(error);
+    res.json({ success: false, message: error.message })
+    }
 }
