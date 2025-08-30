@@ -26,20 +26,31 @@ Pingup is a fullstack  social media platform where users can connect, share post
 
 Frontend
 React (Vite)
+
 Tailwind CSS
+
 Clerk Authentication
+
 Axios
+
 Moment.js
 
 Backend
 Node.js & Express.js
+
 MongoDB & Mongoose
+
 JWT Authentication (with Clerk integration)
+
 Cloudinary (for media uploads)
+
 inngest
+
 imagekit
 
 Other Tools
 Toast Notifications
+
 Git & GitHub (Version Control)
+
 vercel for deployment
