@@ -22,9 +22,11 @@ Pingup is a fullstack  social media platform where users can connect, share post
 
 📊 Responsive UI – Built with React + Tailwind CSS
 
+
 🛠️ Tech Stack
 
-Frontend
+Frontend: 
+
 React (Vite)
 
 Tailwind CSS
@@ -35,7 +37,9 @@ Axios
 
 Moment.js
 
-Backend
+
+Backend : 
+
 Node.js & Express.js
 
 MongoDB & Mongoose
@@ -48,7 +52,9 @@ inngest
 
 imagekit
 
-Other Tools
+
+Other Tools:
+
 Toast Notifications
 
 Git & GitHub (Version Control)
