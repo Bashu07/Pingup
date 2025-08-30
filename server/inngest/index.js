@@ -6,7 +6,10 @@ import Story from "../models/story.js";
 import Message from "../models/message.js";
 
 // Create a client to send and receive events
-export const inngest = new Inngest({ id: "pingup-app" });
+export const inngest = new Inngest({ id: "pingup-app",
+     eventKey: process.env.INNGEST_EVENT_KEY,
+}
+);
 
 
 // Inngest Function to save user data to a database
@@ -93,8 +96,8 @@ const sendNewConnectionRequestReminder = inngest.createFunction(
             })
         })
 
-        const in24Hours = new Date(Date.now() + 24 * 60 * 60 * 100)
-        await step.sleepUntil("wait-for-24-hours");
+        const in24Hours = new Date(Date.now() + 24 * 60 * 60 * 1000)
+        await step.sleepUntil("wait-for-24-hours",in24Hours);
         await step.run('send-connection-request-remainder', async () => {
             const connection = await Connection.findById(connectionId).populate('from_user_id  to_user_id');
             if (connection.status === 'accepted') {
@@ -133,7 +136,7 @@ const deleteStory = inngest.createFunction(
 
     async ({ event, step }) => {
         const { storyId } = event.data;
-        const in24Hours = new Date(Date.now + 24 * 60 * 60 * 100)
+        const in24Hours = new Date(Date.now() + 24 * 60 * 60 * 100)
         await step.sleepUntil('wait-for-24-hours', in24Hours)
         await step.run('delete-story', async () => {
             await Story.findByIdAndDelete(storyId)

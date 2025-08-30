@@ -70,7 +70,7 @@ export const sendMessage = async(req , res)=>{
         const messageWithUserData = await Message.findById(message._id).populate('from_user_id')
        
         if(connections[to_user_id]){
-            connections[to_user_id].write(`data:${json.stringify(messageWithUserData)}\n\n`)
+            connections[to_user_id].write(`data:${JSON.stringify(messageWithUserData)}\n\n`)
         }
     } catch (error) {
         console.log(error)
@@ -86,7 +86,7 @@ export const getChatMEssages = async(req , res)=>{
         const {to_user_id} = req.body
 
         const messages = await Message.find({
-            $0r:[
+            $or:[
                 {from_user_id:userId , to_user_id},
                 {from_user_id: to_user_id , to_user_id:userId}
             ]
@@ -105,7 +105,7 @@ export const getChatMEssages = async(req , res)=>{
 export const getUserRecentMessage = async(req , res)=>{
     try {
         const {userId} = req.auth()
-        const messages = await Message.find({to_user_id:userId}.populate('from_user_id to_user_id') ).sort({created_at : -1})
+        const messages = await Message.find({to_user_id:userId}).populate('from_user_id to_user_id' ).sort({created_at : -1})
 
         res.json({success:true , messages})
 

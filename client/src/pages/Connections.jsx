@@ -1,27 +1,100 @@
-import React, { useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import {Users , UserPlus,UserCheck, UserRoundPen, MessageSquare} from 'lucide-react'
 
-  import {
-    dummyConnectionsData as connections,
-    dummyFollowersData as followers,
-   dummyFollowingData as following,
-    dummyPendingConnectionsData as pendingCOnnections
-  } from '../assets/assets'
 import { useNavigate } from 'react-router-dom'
+import { useSelector , useDispatch } from 'react-redux'
+import { useAuth } from '@clerk/clerk-react'
+import { fetchConnections } from '../features/connections/connectionSlice'
+import api from '../api/axios'
+import toast from 'react-hot-toast'
 
 const Connections = () => {
 
   const [currentTab , setCurrentTab] = useState('Follower')
+  const [loading, setLoading] = useState(false)
   const navigate = useNavigate()
+  const dispatch=useDispatch()
+
+  const {getToken} = useAuth()
+
+  const {connections , pendingConnections , followers , following} = useSelector((state)=>state.connections)
 
   const dataArray =[
-    {label : 'Follower' , value: followers , icon:Users},
-    {label : 'Following' , value: following , icon:UserCheck},
-    {label : 'Pending' , value: pendingCOnnections , icon:UserRoundPen},
-    {label : 'Connection' , value: connections , icon:UserPlus},
-
-    
+    {label : 'Follower' , value: followers || [] , icon:Users},
+    {label : 'Following' , value: following || [] , icon:UserCheck},
+    {label : 'Pending' , value: pendingConnections || [] , icon:UserRoundPen},
+    {label : 'Connection' , value: connections || [] , icon:UserPlus},
   ]
+
+  const handleUnfollow = async(userId)=>{
+    if (loading) return
+    setLoading(true)
+    
+    try {
+      const token = await getToken()
+      const {data} = await api.post('/api/user/unfollow' , {id:userId} ,  {
+        headers:{Authorization: `Bearer ${token}`}
+      })
+      if(data.success){
+        toast.success(data.message)
+        dispatch(fetchConnections(await getToken()))
+      }else{
+        toast.error(data.message)
+      }
+    } catch (error) {
+      console.error('Unfollow error:', error)
+      toast.error(error.message || 'Failed to unfollow')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  
+  const acceptConnection = async(userId)=>{
+    if (loading) return
+    setLoading(true)
+    
+    try {
+      const token = await getToken()
+      const {data} = await api.post('/api/user/accept' , {id:userId} ,  {
+        headers:{Authorization: `Bearer ${token}`}
+      })
+      if(data.success){
+        toast.success(data.message)
+        dispatch(fetchConnections(await getToken()))
+      }else{
+        toast.error(data.message)
+      }
+    } catch (error) {
+      console.error('Accept connection error:', error)
+      toast.error(error.message || 'Failed to accept connection')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  useEffect(()=>{
+    const loadConnections = async () => {
+      try {
+        const token = await getToken()
+        if (token) {
+          dispatch(fetchConnections(token))
+        }
+      } catch (error) {
+        console.error('Failed to load connections:', error)
+        toast.error('Failed to load connections')
+      }
+    }
+    
+    loadConnections()
+  },[getToken, dispatch])
+
+  // Debug: Log the data to see what's being received
+  useEffect(() => {
+    console.log('Connections state:', {connections, pendingConnections, followers, following})
+  }, [connections, pendingConnections, followers, following])
+
+  const currentData = dataArray.find((item)=> item.label === currentTab)?.value || []
 
   return (
     <div className='min-h-screen bg-slate-50'>
@@ -29,9 +102,8 @@ const Connections = () => {
 
         {/* title */}
         <div className='mb-8'>
-          <h1 className='text-3xl font-bold text-slate-900 mb-2'>Connectons</h1>
-          <p className='text-slate-600'>Manage your network and discover new connection</p>
-
+          <h1 className='text-3xl font-bold text-slate-900 mb-2'>Connections</h1>
+          <p className='text-slate-600'>Manage your network and discover new connections</p>
         </div>
 
         {/* Counts */}
@@ -40,95 +112,111 @@ const Connections = () => {
             dataArray.map((item , index)=>(
               <div key={index} className='flex flex-col items-center justify-center gap-1 border h-20 w-40 border-gray-200 bg-white shadow rounded-md'>
                 <b>{item.value.length}</b>
-              <p className='text-slate-600'>{item.label}</p>
-
+                <p className='text-slate-600'>{item.label}</p>
               </div>
             ))
           }
-
         </div>
 
         {/* Tabs  */}
         <div className='inline-flex flex-wrap items-center border border-gray-200 rounded-md p-1 bg-white shadow-sm'>
           {
             dataArray.map((tab)=>(
-              <button onClick={()=>setCurrentTab(tab.label)} key={tab.label} className={`flex items-center px-3 py-1 text-sm rounded-md transition-colors cursor-pointer ${currentTab === tab.label ? 'bg-white font-medium text-black' : 'text-gray-500 hover:text-black'}`}>
+              <button 
+                onClick={()=>setCurrentTab(tab.label)} 
+                key={tab.label} 
+                className={`flex items-center px-3 py-1 text-sm rounded-md transition-colors cursor-pointer ${
+                  currentTab === tab.label ? 'bg-blue-100 font-medium text-blue-700 shadow-sm' : 'text-gray-500 hover:text-black'
+                }`}
+              >
                 <tab.icon className='w-4 h-4' />
                 <span className='ml-1'>{tab.label}</span>
-                {
-                  tab.count !== undefined && (
-                    <span className='ml-2 text-xs bg-gray-100 text-gray-700 px-2 py-0.5 rounded-full'>{tab.count}</span>
-                  )
-                }
-
+                <span className='ml-2 text-xs bg-gray-100 text-gray-700 px-2 py-0.5 rounded-full'>
+                  {tab.value.length}
+                </span>
               </button>
             ))
           }
-
         </div>
+
+        {/* Loading State */}
+        {loading && (
+          <div className='flex justify-center mt-6'>
+            <div className='text-gray-500'>Loading...</div>
+          </div>
+        )}
+
+        {/* Empty State */}
+        {!loading && currentData.length === 0 && (
+          <div className='flex flex-col items-center justify-center mt-12 text-gray-500'>
+            <Users className='w-12 h-12 mb-4' />
+            <p className='text-lg font-medium'>No {currentTab.toLowerCase()} found</p>
+            <p className='text-sm'>Your {currentTab.toLowerCase()} list is empty</p>
+          </div>
+        )}
 
         {/* Connections */}
-        <div className='flex flex-wrap gap-6 mt-6'>
-          {
-            dataArray.find((item)=> item.label === currentTab
-          ).value.map((user)=>(
-            <div key={user._id} className='w-full max-w-88 flex gap-5 p-6 bg-white shadow rounded-md'>
-              <img src={user.profile_picture} className='rounded-full w-12 h-12 shadow-md mx-auto' alt="" />
+        {!loading && currentData.length > 0 && (
+          <div className='flex flex-wrap gap-6 mt-6'>
+            {
+              currentData.map((user)=>(
+                <div key={user._id || user.id} className='w-full max-w-lg flex gap-5 p-6 bg-white shadow rounded-md'>
+                  <img src={user.profile_picture} className='rounded-full w-12 h-12 shadow-md object-cover' alt="" />
 
-              <div className='flex-1'>
-                <p className='font-medium text-slate-700'>{user.full_name}</p>
-                <p className='text-slate-500'>@{user.full_name}</p>
-                <p className='text-sm text-slate-700'>{user.bio.slice(0,30)}...</p>
+                  <div className='flex-1'>
+                    <p className='font-medium text-slate-700'>{user.full_name}</p>
+                    <p className='text-slate-500'>@{user.user_name || user.full_name}</p>
+                    {user.bio && (
+                      <p className='text-sm text-slate-700 mt-1'>
+                        {user.bio.length > 50 ? user.bio.slice(0, 50) + '...' : user.bio}
+                      </p>
+                    )}
 
-                <div className='flex max-sm:flex-col gap-2 mt-4'>
-                  {
-                    <button onClick={()=>navigate(`/profile/${user.id}`)} className='w-full p-2 text-sm rounded bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-600 hover:to-purple-700 active:scale-95 transition text-white cursor-pointer'>
-
-                      View Profile
-                    </button>
-                  }
-                  {
-                    currentTab === 'Following' &&(
-                      <button className='w-full p-2 text-sm rounded bg-slate-100 hover:bg-slate-200 text-black active:scale-95 transition cursor-pointer'>
-                        Unfollow
-
+                    <div className='flex max-sm:flex-col gap-2 mt-4'>
+                      <button 
+                        onClick={()=>navigate(`/profile/${user._id || user.id}`)} 
+                        className='flex-1 p-2 text-sm rounded bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-600 hover:to-purple-700 active:scale-95 transition text-white cursor-pointer'
+                      >
+                        View Profile
                       </button>
-                    )
-                  }
 
-                  {
-                    currentTab === 'Pending' &&(
-                      <button className='w-full p-2 text-sm rounded bg-slate-100 hover:bg-slate-200 text-black active:scale-95 transition cursor-pointer'>
-                        Accept
+                      {currentTab === 'Following' && (
+                        <button 
+                          onClick={()=>handleUnfollow(user._id)} 
+                          disabled={loading}
+                          className='flex-1 p-2 text-sm rounded bg-slate-100 hover:bg-slate-200 text-black active:scale-95 transition cursor-pointer disabled:opacity-50'
+                        >
+                          Unfollow
+                        </button>
+                      )}
 
-                      </button>
-                    )
-                  }
+                      {currentTab === 'Pending' && (
+                        <button 
+                          onClick={()=>acceptConnection(user._id)} 
+                          disabled={loading}
+                          className='flex-1 p-2 text-sm rounded bg-green-100 hover:bg-green-200 text-green-800 active:scale-95 transition cursor-pointer disabled:opacity-50'
+                        >
+                          Accept
+                        </button>
+                      )}
 
-                  {
-                    currentTab === 'Connections' &&(
-                      <button onClick={()=>navigate(`/messages/${user._id}`)} className='w-full p-2 text-sm rounded bg-slate-100 hover:bg-slate-200 text-black active:scale-95 transition cursor-pointer'>
-                        <MessageSquare className='w-4 h-4' />
-                        Message
-
-                      </button>
-                    )
-                  }
-
+                      {currentTab === 'Connection' && (
+                        <button 
+                          onClick={()=>navigate(`/messages/${user._id}`)} 
+                          className='flex-1 p-2 text-sm rounded bg-slate-100 hover:bg-slate-200 text-black active:scale-95 transition cursor-pointer flex items-center justify-center gap-1'
+                        >
+                          <MessageSquare className='w-4 h-4' />
+                          Message
+                        </button>
+                      )}
+                    </div>
+                  </div>
                 </div>
-
-
-
-              </div>
-
-            </div>
-          ))
-          }
-
-        </div>
-
+              ))
+            }
+          </div>
+        )}
       </div>
-
     </div>
   )
 }

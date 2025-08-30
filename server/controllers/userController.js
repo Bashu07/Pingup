@@ -8,7 +8,7 @@ import fs from "fs";
 // Get UserData using userId
 export const getUserData = async (req, res) => {
   try {
-    const { userId } = req.auth; // ✅ req.auth is an object, not a function
+    const { userId } = req.auth(); 
     const user = await User.findById(userId);
 
     if (!user) {
@@ -25,7 +25,7 @@ export const getUserData = async (req, res) => {
 // Update userdata
 export const updateUserData = async (req, res) => {
   try {
-    const { userId } = req.auth;
+    const { userId } = req.auth();
 
     let { username, bio, location, full_name } = req.body;
 
@@ -121,7 +121,7 @@ export const discoverUser = async (req, res) => {
     })
 
     const filteredUsers=allUsers.filter(user=>user._id !==userId)
-    res.json({success:true , users:filteredUsers})
+    res.json({success:true , user:filteredUsers})
 
 
   } catch (error) {
@@ -132,10 +132,10 @@ export const discoverUser = async (req, res) => {
 
 // Follow Users
 
-export const followUser = async()=>{
+export const followUser = async(req,res)=>{
 try {
     
-    const {userId} = req.auth()
+    const {userId} = req.auth();
     const {id} = req.body
 
     const user = await User.findById(userId)
@@ -150,7 +150,7 @@ try {
     toUser.followers.push(userId)
     await toUser.save()
 
-    res.json({success:false , message:"Now You are following this user"})
+    res.json({success:true , message:"Now You are following this user"})
 
     
 } catch (error) {
@@ -159,9 +159,9 @@ try {
 }
 }
 
-// Umfollow user
+// Unfollow user
 
-export const unFollowUser = async()=>{
+export const unFollowUser = async(req,res)=>{
 try {
     
     const {userId} = req.auth()
@@ -193,7 +193,7 @@ export const sendConnectionRequest = async(req, res)=>{
         // check if user has sent more than 20 request in last 24 hours
 
         const last24Hours = new Date(Date.now()-24*60*60*1000)
-        const connectionRequests = await COnnection.find({from_user_id: userId , created_at:{$gt:last24Hours}})
+        const connectionRequests = await Connection.find({from_user_id: userId , created_at:{$gt:last24Hours}})
         if(connectionRequests.length >=20){
             return res.json({success:false , message:"You have sent More than 20 connection request in last 24 hours"})
         }
@@ -201,8 +201,8 @@ export const sendConnectionRequest = async(req, res)=>{
         // check if user are already connected or not 
         const connection = await Connection.findOne({
             $or:[
-                {from_user_id:userId , to_userId:id},
-                {from_user_id:id , to_userId:userId}
+                {from_user_id: userId , to_user_id: id},
+                {from_user_id: id , to_user_id: userId}
             ]
         })
 
@@ -245,7 +245,7 @@ export const getUserConnections = async(req,res)=>{
         const pendingConnections = (await Connection.find({to_user_id:userId , status:'pending'}).populate('from_user_id'))
         .map(connection=>connection.from_user_id)
 
-        res.json({success:true , connections , followers , following})
+        res.json({success:true , connections , followers , following , pendingConnections})
 
     } catch (error) {
          console.log(error);
@@ -270,7 +270,7 @@ try {
     user.connections.push(id)
     await user.save()
 
-     const toUser = await User.findById(Id)
+     const toUser = await User.findById(id)
     toUser.connections.push(userId)
     await toUser.save()
 

@@ -3,10 +3,10 @@ import mongoose from 'mongoose'
 
 const storySchema = new mongoose.Schema({
     user:{type:String , ref:'User' , required:true},
-    content :{type:String},
+    content:{type:String},
     media_urls :[{type:String}],
     media_type:{type:String , enum:['text' , 'image',  'video'] , required:true},
-    views_count:{type:String  , ref:'user'},
+    views_count:[{type:String  , ref:'user'}],
     background_color:{type:String}
     
 },{timestamps:true , minimize:false})

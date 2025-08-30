@@ -21,6 +21,9 @@ export const addUserStory = async(req , res)=>{
                 file: fileBuffer,
                 fileName:media.originalname
             })
+        
+            media_urls = response.url
+        }
 
             // Create story
             const story = await Story.create({
@@ -39,7 +42,7 @@ export const addUserStory = async(req , res)=>{
 
             res.json({success:true })
 
-        }       
+             
     } catch (error) {
         console.log(error)
         res.json({success:false , message: error.message})
@@ -50,7 +53,7 @@ export const addUserStory = async(req , res)=>{
 export const getStories = async(req,res)=>{
 try {
     const {userId} = req.auth()
-    const user = await User.find(userId)
+    const user = await User.findById(userId)
 
     // Users connections and following
     const userIds = [userId , ...user.connections , ...user.following]

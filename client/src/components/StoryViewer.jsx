@@ -46,12 +46,12 @@ const StoryViewer = ({viewStory , setViewStory}) => {
         switch(viewStory.media_type){
             case 'image':
                 return(
-                    <img src={viewStory.media_url} alt="" className='max-w-full max-h-screen object-contain' />
+                    <img src={viewStory.media_urls} alt="" className='max-w-full max-h-screen object-contain' />
                 );
 
                 case 'video':
                     return(
-                        <video onEnded ={()=> setViewStory(null)} src={viewStory.media_url}
+                        <video onEnded ={()=> setViewStory(null)} src={viewStory.media_urls}
                         className='max-h-screen' controls autoPlay />
                     );
 
